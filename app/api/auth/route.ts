@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createUser, ensureDemo, verifyUser } from "@/lib/db";
+import { createUser, verifyUser } from "@/lib/db";
 import { currentUserId, sessionCookie, signSession } from "@/lib/session";
 import { snapshot } from "@/lib/db";
 
@@ -14,7 +14,6 @@ export async function GET() {
 export async function POST(request: Request) {
   const body = await request.json();
   try {
-    await ensureDemo();
     const userId = body.mode === "signup"
       ? await createUser(String(body.name || ""), String(body.email || ""), String(body.password || ""))
       : await verifyUser(String(body.email || ""), String(body.password || ""));
@@ -23,7 +22,8 @@ export async function POST(request: Request) {
     res.cookies.set(cookie.name, cookie.value, cookie.options);
     return res;
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Could not sign in.";
+    const raw = error instanceof Error ? error.message : "Could not sign in.";
+    const message = /timeout|ENOTFOUND|connect/i.test(raw) ? "The database is slow right now. Try again." : raw;
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }
