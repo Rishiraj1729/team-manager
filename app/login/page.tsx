@@ -1,10 +1,12 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, Suspense, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
-export default function LoginPage() {
-  const [mode, setMode] = useState<"signup" | "login">("login");
+function LoginForm() {
+  const params = useSearchParams();
+  const [mode, setMode] = useState<"signup" | "login">(params.get("mode") === "signup" ? "signup" : "login");
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
   const [email, setEmail] = useState("");
@@ -28,7 +30,7 @@ export default function LoginPage() {
         setPending(false);
         return;
       }
-      window.location.assign("/home");
+      window.location.replace("/home");
     } catch {
       setError("Sign-in took too long. Try again.");
       setPending(false);
@@ -60,7 +62,7 @@ export default function LoginPage() {
         <label htmlFor="password">Password</label>
         <input id="password" name="password" type="password" autoComplete={mode === "signup" ? "new-password" : "current-password"} minLength={8} required value={password} onChange={(event) => setPassword(event.target.value)} />
         <p className="error">{error}</p>
-        <button className="primary" disabled={pending}>{pending ? "Please wait" : mode === "signup" ? "Create account" : "Sign in"}</button>
+        <button className="primary" disabled={pending}>{pending ? "One moment…" : mode === "signup" ? "Create account" : "Sign in"}</button>
         <button type="button" className="ghost" disabled={pending} onClick={() => { setEmail("demo@team.app"); setPassword("demo1234"); submit("login", "demo@team.app", "demo1234"); }}>
           Enter as demo owner
         </button>
@@ -69,5 +71,13 @@ export default function LoginPage() {
         </button>
       </form>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   );
 }

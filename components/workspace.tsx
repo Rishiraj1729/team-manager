@@ -43,14 +43,29 @@ export function Workspace() {
   const [showNav, setShowNav] = useState(false);
 
   async function load() {
-    const res = await fetch("/api/workspace");
-    if (res.status === 401) {
-      window.location.assign("/login");
-      return;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 20000);
+    try {
+      const res = await fetch("/api/workspace", { signal: controller.signal });
+      if (res.status === 401) {
+        window.location.assign("/login");
+        return;
+      }
+      const json = await res.json();
+      if (!res.ok || !json.user) {
+        setError(json.error || "Could not open your team.");
+        setData(null);
+        return;
+      }
+      setError("");
+      setData(json);
+      setChannelId((current) => current || json.channels?.find((c: Channel) => !c.task_id)?.id || json.channels?.[0]?.id || "");
+    } catch {
+      setError("Opening your team took too long. Try again.");
+      setData(null);
+    } finally {
+      clearTimeout(timer);
     }
-    const json = await res.json();
-    setData(json);
-    setChannelId((current) => current || json.channels?.find((c: Channel) => !c.task_id)?.id || json.channels?.[0]?.id || "");
   }
 
   useEffect(() => {
@@ -104,7 +119,14 @@ export function Workspace() {
   }
 
   if (!data?.user) {
-    return <main className="auth"><div className="card"><p>Opening your team…</p></div></main>;
+    return (
+      <main className="auth">
+        <div className="card">
+          <p>{error || "Opening your team…"}</p>
+          {error && <button className="primary" onClick={() => load()}>Try again</button>}
+        </div>
+      </main>
+    );
   }
 
   if (!data.team) {

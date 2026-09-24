@@ -1,10 +1,10 @@
 import Link from "next/link";
 
 const points = [
-  ["Invite by code", "The owner creates the team. Each person joins once, with a code tied to their email."],
-  ["Deadlines in their time", "You set the hour in your zone. They see the same moment in theirs."],
-  ["Chat and proof", "Assign work from the conversation. They submit a note or a file. You approve and award stars."],
-  ["Meetings", "Schedule from the app. A Google connection adds the calendar invite and a Meet link."],
+  ["Form a team", "You create the team and become the owner. People join with a one-time code sent to their own email."],
+  ["Their clock, not yours", "Set a deadline in your timezone. Each person sees that same moment in theirs."],
+  ["Work with a record", "Assign a task from chat, collect proof, then approve it. Stars stay on the person’s profile."],
+  ["Meet without extra seats", "Schedule in the app. Connect Google once and the invite, with a Meet link, comes from you."],
 ];
 
 export default function Landing() {
@@ -12,20 +12,20 @@ export default function Landing() {
     <main className="landing">
       <header className="land-nav">
         <strong>Team</strong>
-        <div className="row">
+        <nav className="row">
           <Link href="/login">Sign in</Link>
-          <Link href="/login" className="land-cta">Start</Link>
-        </div>
+          <Link href="/login?mode=signup" className="land-cta">Create account</Link>
+        </nav>
       </header>
       <section className="hero">
-        <p className="eyebrow">For a small team</p>
-        <h1>Work, deadlines, and proof. In one quiet place.</h1>
-        <p className="lede">Run tasks, duties, chat, and meetings without a per-seat bill. Times follow each person. Reminders stay until the work is done.</p>
-        <div className="row">
-          <Link href="/login" className="land-cta">Open the demo</Link>
-          <Link href="/login" className="land-quiet">Create an account</Link>
+        <p className="eyebrow">Team manager</p>
+        <h1>A quiet place for the work your team actually does.</h1>
+        <p className="lede">Tasks, duties, chat, proof, and meetings. Deadlines follow each person’s timezone. No per-seat bill.</p>
+        <div className="hero-actions">
+          <Link href="/login?mode=signup" className="land-cta">Create an account</Link>
+          <Link href="/login" className="land-quiet">Sign in</Link>
         </div>
-        <p className="muted">Demo owner demo@team.app · demo1234. Member member@team.app · demo1234.</p>
+        <p className="muted">Try it first: demo@team.app / demo1234, or member@team.app / demo1234.</p>
       </section>
       <section className="grid">
         {points.map(([title, copy]) => (

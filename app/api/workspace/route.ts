@@ -47,14 +47,17 @@ export async function GET(request: Request) {
   const userId = await currentUserId();
   if (!userId) return NextResponse.json({ error: "Sign in." }, { status: 401 });
   const force = new URL(request.url).searchParams.get("remind") === "1";
+  let sent = 0;
   if (force) {
     const data = await snapshot(userId);
     if (!data || !("team" in data) || !data.team || data.team.role !== "owner") {
       return NextResponse.json({ error: "Only the owner can send reminders." }, { status: 403 });
     }
+    sent = await deliverReminders(true);
   }
-  const sent = await deliverReminders(force);
-  return NextResponse.json({ ...(await snapshot(userId)), remindersSent: sent, googleReady: googleConfigured() });
+  const data = await snapshot(userId);
+  if (!data?.user) return NextResponse.json({ error: "Sign in again." }, { status: 401 });
+  return NextResponse.json({ ...data, remindersSent: sent, googleReady: googleConfigured() });
 }
 
 export async function POST(request: Request) {

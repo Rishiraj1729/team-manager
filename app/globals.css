@@ -38,8 +38,9 @@ a { color: var(--accent); }
 .landing { min-height: 100dvh; padding: 28px 22px 64px; max-width: 980px; margin: 0 auto; }
 .land-nav, .hero .row, .land-nav .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .land-nav .row { justify-content: flex-end; }
-.hero { padding: 48px 0 28px; }
-.hero h1 { font-size: clamp(40px, 7vw, 68px); max-width: 14ch; }
+.hero { padding: 56px 0 32px; }
+.hero h1 { font-size: clamp(40px, 7vw, 68px); max-width: 16ch; }
+.hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 8px 0 16px; }
 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
 .land-cta, .land-quiet {
   display: inline-flex; align-items: center; justify-content: center;
