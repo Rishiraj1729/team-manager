@@ -35,6 +35,18 @@ button, input, textarea, select { font: inherit; color: inherit; }
 button { cursor: pointer; }
 a { color: var(--accent); }
 
+.landing { min-height: 100dvh; padding: 28px 22px 64px; max-width: 980px; margin: 0 auto; }
+.land-nav, .hero .row, .land-nav .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.land-nav .row { justify-content: flex-end; }
+.hero { padding: 48px 0 28px; }
+.hero h1 { font-size: clamp(40px, 7vw, 68px); max-width: 14ch; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+.land-cta, .land-quiet {
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 980px; padding: 12px 18px; text-decoration: none; margin-top: 8px;
+}
+.land-cta { background: var(--accent); color: var(--accent-ink); }
+.land-quiet { border: 1px solid var(--line); color: var(--ink); }
 .auth {
   min-height: 100dvh;
   display: grid;

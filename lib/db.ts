@@ -8,6 +8,8 @@ const sql = postgres(process.env.DATABASE_URL || "", {
   ssl: "require",
   max: 1,
   prepare: false,
+  connect_timeout: 8,
+  idle_timeout: 10,
 });
 
 function rows<T>(value: T[]) {

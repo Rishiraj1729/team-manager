@@ -1,4 +1,4 @@
-const CACHE = "team-v1";
+const CACHE = "team-v2";
 const SHELL = ["/", "/home", "/manifest.webmanifest", "/icon-192.png", "/icon-512.png"];
 
 self.addEventListener("install", (event) => {

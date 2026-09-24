@@ -1,68 +1,40 @@
-"use client";
+import Link from "next/link";
 
-import { FormEvent, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+const points = [
+  ["Invite by code", "The owner creates the team. Each person joins once, with a code tied to their email."],
+  ["Deadlines in their time", "You set the hour in your zone. They see the same moment in theirs."],
+  ["Chat and proof", "Assign work from the conversation. They submit a note or a file. You approve and award stars."],
+  ["Meetings", "Schedule from the app. A Google connection adds the calendar invite and a Meet link."],
+];
 
-export default function Home() {
-  const router = useRouter();
-  const [mode, setMode] = useState<"signup" | "login">("signup");
-  const [error, setError] = useState("");
-  const [pending, setPending] = useState(false);
-
-  useEffect(() => {
-    fetch("/api/auth").then(async (res) => {
-      const data = await res.json();
-      if (data.user) router.replace("/home");
-    }).catch(() => undefined);
-  }, [router]);
-
-  async function onSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setPending(true);
-    setError("");
-    const form = new FormData(event.currentTarget);
-    const res = await fetch("/api/auth", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        mode,
-        name: form.get("name"),
-        email: form.get("email"),
-        password: form.get("password"),
-      }),
-    });
-    const data = await res.json();
-    setPending(false);
-    if (!res.ok) {
-      setError(data.error || "Could not continue.");
-      return;
-    }
-    router.push("/home");
-  }
-
+export default function Landing() {
   return (
-    <main className="auth">
-      <form className="card" onSubmit={onSubmit}>
-        <div className="eyebrow">Team</div>
-        <h1>{mode === "signup" ? "Start quietly." : "Welcome back."}</h1>
-        <p className="lede">A private place for your people, their deadlines, and the proof of the work.</p>
-        <p className="lede">Demo owner: demo@team.app / demo1234. Demo member: member@team.app / demo1234.</p>
-        {mode === "signup" && (
-          <>
-            <label htmlFor="name">Name</label>
-            <input id="name" name="name" autoComplete="name" required />
-          </>
-        )}
-        <label htmlFor="email">Email</label>
-        <input id="email" name="email" type="email" autoComplete="email" required />
-        <label htmlFor="password">Password</label>
-        <input id="password" name="password" type="password" autoComplete={mode === "signup" ? "new-password" : "current-password"} minLength={8} required />
-        <p className="error">{error}</p>
-        <button className="primary" disabled={pending}>{pending ? "Please wait" : mode === "signup" ? "Create account" : "Sign in"}</button>
-        <button type="button" className="linkish" onClick={() => setMode(mode === "signup" ? "login" : "signup")}>
-          {mode === "signup" ? "I already have an account" : "Create an account"}
-        </button>
-      </form>
+    <main className="landing">
+      <header className="land-nav">
+        <strong>Team</strong>
+        <div className="row">
+          <Link href="/login">Sign in</Link>
+          <Link href="/login" className="land-cta">Start</Link>
+        </div>
+      </header>
+      <section className="hero">
+        <p className="eyebrow">For a small team</p>
+        <h1>Work, deadlines, and proof. In one quiet place.</h1>
+        <p className="lede">Run tasks, duties, chat, and meetings without a per-seat bill. Times follow each person. Reminders stay until the work is done.</p>
+        <div className="row">
+          <Link href="/login" className="land-cta">Open the demo</Link>
+          <Link href="/login" className="land-quiet">Create an account</Link>
+        </div>
+        <p className="muted">Demo owner demo@team.app · demo1234. Member member@team.app · demo1234.</p>
+      </section>
+      <section className="grid">
+        {points.map(([title, copy]) => (
+          <article key={title} className="list-card">
+            <strong>{title}</strong>
+            <p>{copy}</p>
+          </article>
+        ))}
+      </section>
     </main>
   );
 }

@@ -45,7 +45,7 @@ export function Workspace() {
   async function load() {
     const res = await fetch("/api/workspace");
     if (res.status === 401) {
-      router.replace("/");
+      window.location.assign("/login");
       return;
     }
     const json = await res.json();
