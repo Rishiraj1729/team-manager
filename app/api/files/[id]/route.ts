@@ -11,7 +11,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
   const file = await proofFile(userId, id);
   if (!file?.file_bytes) return new NextResponse("Not found.", { status: 404 });
   const bytes = Buffer.isBuffer(file.file_bytes) ? file.file_bytes : Buffer.from(file.file_bytes);
-  return new NextResponse(bytes, {
+  return new NextResponse(new Uint8Array(bytes), {
     headers: {
       "Content-Disposition": `inline; filename="${file.file_name || "proof"}"`,
       "X-Content-Type-Options": "nosniff",
