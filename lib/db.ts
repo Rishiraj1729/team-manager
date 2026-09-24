@@ -6,7 +6,7 @@ export type Role = "owner" | "member";
 
 const sql = postgres(process.env.DATABASE_URL || "", {
   ssl: "require",
-  max: 8,
+  max: 1,
   prepare: false,
   connect_timeout: 8,
   idle_timeout: 10,
