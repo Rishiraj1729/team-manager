@@ -26,9 +26,9 @@ import { formatInZone, zonedInputToUtc } from "@/lib/time";
 export const runtime = "nodejs";
 
 async function deliverReminders(force: boolean) {
-  const due = dueReminders(force);
+  const due = await dueReminders(force);
   for (const item of due) {
-    const ownerId = teamOwnerId(item.team_id);
+    const ownerId = await teamOwnerId(item.team_id);
     const when = formatInZone(item.deadline, item.timezone);
     if (ownerId) {
       await sendGmail(
@@ -38,7 +38,7 @@ async function deliverReminders(force: boolean) {
         `Hi ${item.name},\n\n${item.title} is still open. Your deadline is ${when}.\n`
       );
     }
-    recordReminder(item.task_id, item.assignee_id, item.local_date);
+    await recordReminder(item.task_id, item.assignee_id, item.local_date);
   }
   return due.length;
 }
@@ -48,13 +48,13 @@ export async function GET(request: Request) {
   if (!userId) return NextResponse.json({ error: "Sign in." }, { status: 401 });
   const force = new URL(request.url).searchParams.get("remind") === "1";
   if (force) {
-    const data = snapshot(userId);
+    const data = await snapshot(userId);
     if (!data || !("team" in data) || !data.team || data.team.role !== "owner") {
       return NextResponse.json({ error: "Only the owner can send reminders." }, { status: 403 });
     }
   }
   const sent = await deliverReminders(force);
-  return NextResponse.json({ ...snapshot(userId), remindersSent: sent, googleReady: googleConfigured() });
+  return NextResponse.json({ ...(await snapshot(userId)), remindersSent: sent, googleReady: googleConfigured() });
 }
 
 export async function POST(request: Request) {
@@ -62,33 +62,33 @@ export async function POST(request: Request) {
   if (!userId) return NextResponse.json({ error: "Sign in." }, { status: 401 });
   const body = await request.json();
   try {
-    const me = snapshot(userId);
+    const me = await snapshot(userId);
     const zone = me?.user.timezone || "Asia/Kolkata";
     switch (body.type) {
       case "createTeam":
-        createTeam(userId, String(body.name || ""));
+        await createTeam(userId, String(body.name || ""));
         break;
       case "invite":
-        return NextResponse.json({ invite: createInvite(userId, String(body.email || ""), body.role === "owner" ? "owner" : "member") });
+        return NextResponse.json({ invite: await createInvite(userId, String(body.email || ""), body.role === "owner" ? "owner" : "member") });
       case "revoke":
-        revokeInvite(userId, String(body.inviteId || ""));
+        await revokeInvite(userId, String(body.inviteId || ""));
         break;
       case "join":
-        joinTeam(userId, String(body.code || ""));
+        await joinTeam(userId, String(body.code || ""));
         break;
       case "timezone":
-        setTimezone(userId, String(body.timezone || ""));
+        await setTimezone(userId, String(body.timezone || ""));
         break;
       case "message":
-        postMessage(userId, String(body.channelId || ""), String(body.body || ""));
+        await postMessage(userId, String(body.channelId || ""), String(body.body || ""));
         break;
       case "read":
-        markRead(userId, String(body.channelId || ""));
+        await markRead(userId, String(body.channelId || ""));
         break;
       case "task": {
         const deadlineIso = zonedInputToUtc(String(body.deadline || ""), zone);
         const end = new Date(new Date(deadlineIso).getTime() + 30 * 60 * 1000).toISOString();
-        const email = memberEmail(String(body.assigneeId || ""));
+        const email = await memberEmail(String(body.assigneeId || ""));
         const event = await createCalendarEvent(userId, {
           summary: String(body.title || ""),
           description: String(body.description || ""),
@@ -98,7 +98,7 @@ export async function POST(request: Request) {
           withMeet: false,
           timeZone: zone,
         });
-        const created = createTask({
+        const created = await createTask({
           userId,
           title: String(body.title || ""),
           description: String(body.description || ""),
@@ -106,21 +106,21 @@ export async function POST(request: Request) {
           deadlineIso,
           googleEventId: event?.eventId,
         });
-        return NextResponse.json({ ...snapshot(userId), channelId: created.channelId });
+        return NextResponse.json({ ...(await snapshot(userId)), channelId: created.channelId });
       }
       case "duty":
-        createDuty(userId, String(body.title || ""), String(body.description || ""), String(body.assigneeId || ""));
+        await createDuty(userId, String(body.title || ""), String(body.description || ""), String(body.assigneeId || ""));
         break;
       case "updateTask": {
         const deadlineIso = zonedInputToUtc(String(body.deadline || ""), zone);
-        updateTask(userId, String(body.taskId || ""), String(body.title || ""), deadlineIso, String(body.assigneeId || ""));
+        await updateTask(userId, String(body.taskId || ""), String(body.title || ""), deadlineIso, String(body.assigneeId || ""));
         break;
       }
       case "cancelMeeting":
-        cancelMeeting(userId, String(body.meetingId || ""));
+        await cancelMeeting(userId, String(body.meetingId || ""));
         break;
       case "review":
-        reviewTask(
+        await reviewTask(
           userId,
           String(body.taskId || ""),
           body.decision === "approved" ? "approved" : "rejected",
@@ -132,7 +132,7 @@ export async function POST(request: Request) {
         const startsIso = zonedInputToUtc(String(body.starts || ""), zone);
         const endsIso = zonedInputToUtc(String(body.ends || ""), zone);
         const ids = Array.isArray(body.attendeeIds) ? body.attendeeIds.map(String) : [];
-        const emails = ids.map((id: string) => memberEmail(id)).filter(Boolean);
+        const emails = (await Promise.all(ids.map((id: string) => memberEmail(id)))).filter(Boolean);
         const event = await createCalendarEvent(userId, {
           summary: String(body.title || ""),
           description: "Scheduled in Team",
@@ -142,7 +142,7 @@ export async function POST(request: Request) {
           withMeet: true,
           timeZone: zone,
         });
-        createMeeting({
+        await createMeeting({
           userId,
           title: String(body.title || ""),
           startsIso,
@@ -156,7 +156,7 @@ export async function POST(request: Request) {
       default:
         throw new Error("Unknown action.");
     }
-    return NextResponse.json(snapshot(userId));
+    return NextResponse.json(await snapshot(userId));
   } catch (error) {
     const message = error instanceof Error ? error.message : "Something went wrong.";
     return NextResponse.json({ error: message }, { status: 400 });

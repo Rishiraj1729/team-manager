@@ -46,6 +46,7 @@ export default function Home() {
         <div className="eyebrow">Team</div>
         <h1>{mode === "signup" ? "Start quietly." : "Welcome back."}</h1>
         <p className="lede">A private place for your people, their deadlines, and the proof of the work.</p>
+        <p className="lede">Demo owner: demo@team.app / demo1234. Demo member: member@team.app / demo1234.</p>
         {mode === "signup" && (
           <>
             <label htmlFor="name">Name</label>

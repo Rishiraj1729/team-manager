@@ -1,15 +1,8 @@
-import { createHmac, randomBytes, timingSafeEqual } from "crypto";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
-import path from "path";
+import { createHmac, timingSafeEqual } from "crypto";
 import { cookies } from "next/headers";
 
 export function sessionSecret() {
-  if (process.env.SESSION_SECRET) return process.env.SESSION_SECRET;
-  const dir = path.join(process.cwd(), "data");
-  const file = path.join(dir, "session.secret");
-  if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-  if (!existsSync(file)) writeFileSync(file, randomBytes(32).toString("hex"));
-  return readFileSync(file, "utf8");
+  return process.env.SESSION_SECRET || "local-dev-session-secret";
 }
 
 export function signSession(userId: string) {

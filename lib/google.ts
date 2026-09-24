@@ -24,7 +24,7 @@ export function googleAuthUrl(state: string, origin: string) {
 }
 
 async function accessToken(userId: string) {
-  const row = getGoogleConnection(userId);
+  const row = await getGoogleConnection(userId);
   if (!row) return null;
   const body = new URLSearchParams({
     client_id: process.env.GOOGLE_CLIENT_ID || "",
@@ -68,7 +68,7 @@ export async function exchangeCode(code: string, origin: string, userId: string)
       email = profile.email || "";
     }
   }
-  saveGoogleConnection(userId, json.refresh_token, email);
+  await saveGoogleConnection(userId, json.refresh_token, email);
 }
 
 export async function createCalendarEvent(ownerId: string, input: {
@@ -113,7 +113,7 @@ export async function createCalendarEvent(ownerId: string, input: {
 
 export async function sendGmail(ownerId: string, to: string, subject: string, text: string) {
   const token = await accessToken(ownerId);
-  const conn = getGoogleConnection(ownerId);
+  const conn = await getGoogleConnection(ownerId);
   if (!token || !conn) return false;
   const from = conn.email || "me";
   const raw = [

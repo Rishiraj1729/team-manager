@@ -11,9 +11,9 @@ export async function GET(request: Request) {
   if (secret && auth !== `Bearer ${secret}`) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
-  const due = dueReminders(false);
+  const due = await dueReminders(false);
   for (const item of due) {
-    const ownerId = teamOwnerId(item.team_id);
+    const ownerId = await teamOwnerId(item.team_id);
     if (ownerId) {
       await sendGmail(
         ownerId,
@@ -22,7 +22,7 @@ export async function GET(request: Request) {
         `Hi ${item.name},\n\n${item.title} is still open. Your deadline is ${formatInZone(item.deadline, item.timezone)}.\n`
       );
     }
-    recordReminder(item.task_id, item.assignee_id, item.local_date);
+    await recordReminder(item.task_id, item.assignee_id, item.local_date);
   }
   return NextResponse.json({ sent: due.length });
 }
