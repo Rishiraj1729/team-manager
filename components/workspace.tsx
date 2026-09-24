@@ -63,12 +63,12 @@ export function Workspace() {
 
   const zone = data?.user.timezone || "Asia/Kolkata";
   const owner = data?.team?.role === "owner";
+  const needle = query.trim().toLowerCase();
   const messages = useMemo(
     () => (data?.messages || []).filter((m) => m.channel_id === channelId && (!needle || m.body.toLowerCase().includes(needle))),
     [data, channelId, needle]
   );
   const activeTask = (data?.tasks || []).find((t) => t.id === taskId) || (data?.tasks || []).find((t) => t.channel_id === channelId);
-  const needle = query.trim().toLowerCase();
   const visibleTasks = (data?.tasks || []).filter((task) => {
     if (needle && !`${task.title} ${task.description}`.toLowerCase().includes(needle)) return false;
     if (taskFilter === "mine") return task.assignee_id === data?.user.id && task.status !== "approved";
