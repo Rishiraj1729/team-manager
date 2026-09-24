@@ -1,7 +1,6 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import { ZONES, formatInZone } from "@/lib/time";
 
 type Person = { id: string; name: string; email: string; timezone: string; role: string; stars: number };
@@ -31,7 +30,6 @@ type Data = {
 const sections = ["Home", "Chat", "Tasks", "Duties", "Meetings", "Team"] as const;
 
 export function Workspace() {
-  const router = useRouter();
   const [data, setData] = useState<Data | null>(null);
   const [section, setSection] = useState<(typeof sections)[number]>("Home");
   const [query, setQuery] = useState("");
@@ -147,7 +145,7 @@ export function Workspace() {
             <button className="ghost">Join a team</button>
           </form>
           <p className="error">{error}</p>
-          <button className="linkish" onClick={async () => { await fetch("/api/auth", { method: "DELETE" }); router.push("/"); }}>Sign out</button>
+          <button className="linkish" onClick={async () => { await fetch("/api/auth", { method: "DELETE" }); window.location.replace("/"); }}>Sign out</button>
         </div>
       </main>
     );
@@ -176,7 +174,7 @@ export function Workspace() {
             <div className="muted">Times shown in {zone.replace("_", " ")}</div>
           </div>
           <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search tasks and chat" style={{ maxWidth: 240 }} />
-          <button className="ghost" onClick={async () => { await fetch("/api/auth", { method: "DELETE" }); router.push("/"); }}>Sign out</button>
+          <button className="ghost" onClick={async () => { await fetch("/api/auth", { method: "DELETE" }); window.location.replace("/"); }}>Sign out</button>
         </header>
         {section === "Home" && (
           <div className="panel">
