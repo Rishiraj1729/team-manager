@@ -6,7 +6,7 @@ export type Role = "owner" | "member";
 
 const sql = postgres(process.env.DATABASE_URL || "", {
   ssl: "require",
-  max: 1,
+  max: 8,
   prepare: false,
   connect_timeout: 8,
   idle_timeout: 10,
@@ -308,24 +308,22 @@ export async function snapshot(userId: string) {
   const member = await membership(userId);
   const google = await googleConnected(userId);
   if (!member) return { user, team: null, google };
-  const people = await many(sql`select u.id, u.name, u.email, u.timezone, m.role, m.stars from members m join users u on u.id = m.user_id where m.team_id = ${member.team_id} order by u.name`);
-  const channels = await many(sql`
-    select c.*, (
-      select count(*)::int from messages msg where msg.channel_id = c.id
-      and msg.created_at > coalesce((select last_read from reads r where r.user_id = ${userId} and r.channel_id = c.id), '1970-01-01')
-    ) as unread
-    from channels c where c.team_id = ${member.team_id} order by (c.task_id is not null), c.name`);
-  const messages = await many(sql`select msg.id, msg.channel_id, msg.body, msg.created_at, u.name as author_name from messages msg join channels c on c.id = msg.channel_id join users u on u.id = msg.author_id where c.team_id = ${member.team_id} order by msg.created_at`);
-  const tasks = await many(sql`select * from tasks where team_id = ${member.team_id} order by deadline`);
-  const duties = await many(sql`select * from duties where team_id = ${member.team_id}`);
-  const proofs = await many(sql`select p.id, p.task_id, p.user_id, p.note, p.file_name, p.created_at from proofs p join tasks t on t.id = p.task_id where t.team_id = ${member.team_id} order by p.created_at`);
-  const reviews = await many(sql`select r.* from reviews r join tasks t on t.id = r.task_id where t.team_id = ${member.team_id} order by r.created_at`);
-  const meetings = await many(sql`select * from meetings where team_id = ${member.team_id} order by starts_at`);
-  const attendees = await many(sql`select a.meeting_id, a.user_id from meeting_attendees a join meetings m on m.id = a.meeting_id where m.team_id = ${member.team_id}`);
-  const reminders = await many(sql`select r.id, r.local_date, t.title from reminders r join tasks t on t.id = r.task_id where r.user_id = ${userId} order by r.created_at desc limit 30`);
-  const invites = member.role === "owner"
-    ? await many(sql`select id, email, role, expires_at, used_at, revoked from invites where team_id = ${member.team_id} order by expires_at desc`)
-    : [];
+  const teamId = member.team_id;
+  const [people, channels, messages, tasks, duties, proofs, reviews, meetings, attendees, reminders, invites] = await Promise.all([
+    many(sql`select u.id, u.name, u.email, u.timezone, m.role, m.stars from members m join users u on u.id = m.user_id where m.team_id = ${teamId} order by u.name`),
+    many(sql`select c.*, (select count(*)::int from messages msg where msg.channel_id = c.id and msg.created_at > coalesce((select last_read from reads r where r.user_id = ${userId} and r.channel_id = c.id), '1970-01-01')) as unread from channels c where c.team_id = ${teamId} order by (c.task_id is not null), c.name`),
+    many(sql`select msg.id, msg.channel_id, msg.body, msg.created_at, u.name as author_name from messages msg join channels c on c.id = msg.channel_id join users u on u.id = msg.author_id where c.team_id = ${teamId} order by msg.created_at`),
+    many(sql`select * from tasks where team_id = ${teamId} order by deadline`),
+    many(sql`select * from duties where team_id = ${teamId}`),
+    many(sql`select p.id, p.task_id, p.user_id, p.note, p.file_name, p.created_at from proofs p join tasks t on t.id = p.task_id where t.team_id = ${teamId} order by p.created_at`),
+    many(sql`select r.* from reviews r join tasks t on t.id = r.task_id where t.team_id = ${teamId} order by r.created_at`),
+    many(sql`select * from meetings where team_id = ${teamId} order by starts_at`),
+    many(sql`select a.meeting_id, a.user_id from meeting_attendees a join meetings m on m.id = a.meeting_id where m.team_id = ${teamId}`),
+    many(sql`select r.id, r.local_date, t.title from reminders r join tasks t on t.id = r.task_id where r.user_id = ${userId} order by r.created_at desc limit 30`),
+    member.role === "owner"
+      ? many(sql`select id, email, role, expires_at, used_at, revoked from invites where team_id = ${teamId} order by expires_at desc`)
+      : Promise.resolve([]),
+  ]);
   return {
     user, team: { id: member.team_id, name: member.team_name, role: member.role }, google,
     people, channels, messages, tasks, duties, proofs, reviews, meetings, attendees, reminders, invites,

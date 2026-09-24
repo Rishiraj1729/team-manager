@@ -24,6 +24,8 @@ import { currentUserId } from "@/lib/session";
 import { formatInZone, zonedInputToUtc } from "@/lib/time";
 
 export const runtime = "nodejs";
+export const preferredRegion = "bom1";
+export const maxDuration = 15;
 
 async function deliverReminders(force: boolean) {
   const due = await dueReminders(force);

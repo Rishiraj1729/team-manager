@@ -4,6 +4,8 @@ import { currentUserId, sessionCookie, signSession } from "@/lib/session";
 import { snapshot } from "@/lib/db";
 
 export const runtime = "nodejs";
+export const preferredRegion = "bom1";
+export const maxDuration = 15;
 
 export async function GET() {
   const userId = await currentUserId();

@@ -52,7 +52,6 @@ export function Workspace() {
       const json = await res.json();
       if (!res.ok || !json.user) {
         setError(json.error || "Could not open your team.");
-        setData(null);
         return;
       }
       setError("");
@@ -60,7 +59,6 @@ export function Workspace() {
       setChannelId((current) => current || json.channels?.find((c: Channel) => !c.task_id)?.id || json.channels?.[0]?.id || "");
     } catch {
       setError("Opening your team took too long. Try again.");
-      setData(null);
     } finally {
       clearTimeout(timer);
     }
@@ -70,7 +68,7 @@ export function Workspace() {
     load().catch(() => setError("Could not load the workspace."));
     const timer = setInterval(() => {
       if (document.visibilityState === "visible") load().catch(() => undefined);
-    }, 4000);
+    }, 15000);
     return () => clearInterval(timer);
   }, []);
 
